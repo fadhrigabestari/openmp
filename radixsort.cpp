@@ -17,7 +17,8 @@ int getMaxElement(int *arr, int n) {
   return max;
 }
 
-void radixsort(int *arr, int n) {
+// parallel radix sort 
+void radixsort(int *arr, int n, int t_count) {
   int bSize = pow(2, BITS);
   int currentPosition = 0;
 
@@ -41,6 +42,7 @@ void radixsort(int *arr, int n) {
       b[--bucket[(arr[i]>>(currentPosition*BITS)) & mask]] = arr[i];
     }
 
+	#pragma omp parallel for
     for (int i = 0; i < n; i++){
       arr[i] = b[i];
     }
@@ -49,11 +51,29 @@ void radixsort(int *arr, int n) {
   }
 }
 
-int main() {
-  int data[] = {8, 8, 2, 1, 2, 7};
+void rng(int* arr, int n){
+	int seed = 13516031;
+	srand(seed);
+	for(long i = 0; i < n;i++){
+		arr[i] = (int)rand();
+	}
+}
 
-  radixsort(data, 6);
-  for (int i = 0; i < 6; i++) {
-    cout << data[i];
+void print_array(int arr[], int n){
+	for (int i = 0; i < n ; i++){
+		cout << arr[i] << "\n";
+	}
+}
+
+int main(int argc, char* argv[]) {
+  int t_count = strtol(argv[1], NULL, 10);
+  int data[10] = {0};
+  rng(data, 10);
+  print_array(data, 10);
+
+  radixsort(data, 10, t_count);
+  cout << "Hasil Sort" << "\n";
+  for (int i = 0; i < 10; i++) {
+    cout << data[i] << "\n";
   }
 }
