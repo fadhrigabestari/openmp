@@ -4,10 +4,12 @@
 2. Type 'make' to compile this program
 3. Type './radix_sort threads_count' to run the program
 <br>
+
 # Pembagian tugas
 - Yuly Haruka Berliana Gunawan / 13516031
 - M. Fadhriga Bestari / 13516154
 <br>
+
 # Laporan Pengerjaan
 ## Deskripsi Solusi Paralel
 Pada program yang telah kami buat, pada algortima radix sort terdapat banyak looping untuk mencari flag, index down, index up, dan permutasi dalam proses radix sort. Setiap looping yang terjadi pada radix sort bersifat independen ( data pada looping tidak bergantung pada looping lainnya ) kecuali looping pada proses pengisian index down dan index up. Maka dari itu, kami mengimplementasikan OpenMP paralel pada looping yang terdapat pada algoritma radix sort sehingga per-looping nya akan dibagi menjadi banyak nya thread yang diinginkan. 
@@ -23,6 +25,7 @@ Jumlah thread yang digunakan adalah 4 karena sesuai dengan core yang dialokasika
 
 ## Pengukuran Kinerja
 <br>
+
 - N = 5000 dengan thread = 4
 Uji Coba 1
 Radix Sort dengan paralel : 21672 ms
