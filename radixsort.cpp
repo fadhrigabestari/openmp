@@ -1,10 +1,12 @@
 #include<iostream>
 #include <cmath>
+#include <chrono>
 
 #define BITS 3
 #define BASE 1 << BITS
 
 using namespace std;
+using namespace std::chrono;
 
 
 int getMaxElement(int *arr, int n) {
@@ -48,7 +50,7 @@ void countSort(int arr[], int n, int exp)
   
 // The main function to that sorts arr[] of size n using  
 // Radix Sort 
-void radixsort(int arr[], int n) 
+void serialRadixSort(int arr[], int n) 
 { 
     // Find the maximum number to know number of digits 
     int m = getMaxElement(arr, n); 
@@ -56,13 +58,18 @@ void radixsort(int arr[], int n)
     // Do counting sort for every digit. Note that instead 
     // of passing digit number, exp is passed. exp is 10^i 
     // where i is current digit number 
-    for (int exp = 1; m/exp > 0; exp *= 10) 
-        countSort(arr, n, exp); 
+    auto start = high_resolution_clock::now();
+    for (int exp = 1; m/exp > 0; exp *= 10){
+    	countSort(arr, n, exp);
+    }
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop-start);
+    cout << duration.count() << endl;  
 } 
 
 
 // parallel radix sort 
-void radixsort(int *arr, int n, int t_count) {
+void radixsort(int *arr, int n) {
   int bSize = pow(2, BITS);
   int currentPosition = 0;
 
@@ -72,6 +79,8 @@ void radixsort(int *arr, int n, int t_count) {
   int b[bSize];
 
   int maxElement = getMaxElement(arr, n);
+
+  auto start = high_resolution_clock::now();
   while ((maxElement >> (currentPosition * BITS)) > 0) {
     int bucket[1<<BITS] = { 0 };
     for (int i = 0; i < n; i++){
@@ -86,13 +95,15 @@ void radixsort(int *arr, int n, int t_count) {
       b[--bucket[(arr[i]>>(currentPosition*BITS)) & mask]] = arr[i];
     }
 
-	#pragma omp parallel for
     for (int i = 0; i < n; i++){
       arr[i] = b[i];
     }
 
     currentPosition++;
   }
+  auto stop = high_resolution_clock::now();
+  auto duration = duration_cast<microseconds>(stop-start);
+  cout << duration.count() << endl;
 }
 
 void rng(int* arr, int n){
@@ -109,15 +120,14 @@ void print_array(int arr[], int n){
 	}
 }
 
-int main(int argc, char* argv[]) {
-  int t_count = strtol(argv[1], NULL, 10);
-  int data[10] = {0};
-  rng(data, 10);
-  print_array(data, 10);
+int main(/*int argc, char* argv[]*/) {
+  // int t_count = strtol(argv[1], NULL, 10);
+  int data[100];
+  rng(data, 100);
+  print_array(data, 100);
 
-  radixsort(data, 10, t_count);
-  cout << "Hasil Sort" << "\n";
-  for (int i = 0; i < 10; i++) {
-    cout << data[i] << "\n";
-  }
+  serialRadixSort(data, 100);
+
+  // radix sort ini masih segfault
+  radixsort(data, 100);
 }
