@@ -7,7 +7,11 @@
 
 # Pembagian tugas
 - Yuly Haruka Berliana Gunawan / 13516031
+	- Parallel the radix sort
+	- Main Program
 - M. Fadhriga Bestari / 13516154
+	- Radix Sort Algorithm
+	- Main Program
 <br>
 
 # Laporan Pengerjaan
