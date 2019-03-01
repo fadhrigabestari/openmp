@@ -2,8 +2,11 @@
 #include <iostream>
 #include <iterator>
 #include <ctime>
+#include <fstream>
 
 using namespace std;
+
+#define THREAD_COUNT 4
 
 int getMaxElement(int *arr, int n) {
   int max = arr[0];
@@ -16,10 +19,17 @@ int getMaxElement(int *arr, int n) {
 }
 
 void printArr(int* arr, int n) {
+  ofstream fstream;
+  fstream.open("data/output");
   for (int i = 0; i < n; i++) {
-    cout << i << " ";
+    fstream << arr[i] << endl;
   }
-  cout << "\n";
+}
+
+void printArrei(int* arr, int n) {
+  for (int i = 0; i < n; i++) {
+    cout << arr[i] << endl;
+  }
 }
 
 void rng(int* arr, int n) {
@@ -83,10 +93,10 @@ void serialRadixSort(int arr[], int n)
 
 // parallel radix sort
 // get specific bit at index = idx
-int* generateFlag(int* arr, int n, int idx, int thread_count) {
+int* generateFlag(int* arr, int n, int idx) {
   int* flag = (int*) malloc(n * sizeof(int));
 
-  #pragma omp parallel for num_threads(thread_count)
+  #pragma omp parallel for num_threads(THREAD_COUNT)
   for (int i = 0; i < n; i++) {
     if ((arr[i] >> idx) & 1 == 1) {
       flag[i] = 1;
@@ -127,10 +137,10 @@ int* generateIUp(int* flag, int n) {
   return iUp;
 }
 
-int* generateShouldIndex(int* flag, int* iDown, int* iUp, int n, int thread_count) {
+int* generateShouldIndex(int* flag, int* iDown, int* iUp, int n) {
   int* shouldIndex = (int*) malloc(n * sizeof(int));
 
-  #pragma omp parallel for num_threads(thread_count)
+  #pragma omp parallel for num_threads(THREAD_COUNT)
   for (int i = 0; i < n; i++) {
     if (flag[i] == 0) {
       shouldIndex[i] = iDown[i];
@@ -142,68 +152,68 @@ int* generateShouldIndex(int* flag, int* iDown, int* iUp, int n, int thread_coun
 }
 
 // permute
-void permute(int* arr, int* flag, int* iDown, int* iUp, int n, int thread_count) {
+void permute(int* arr, int* flag, int* iDown, int* iUp, int n) {
   int* shouldArr = (int*) malloc(n * sizeof(int));
 
-  int* shouldIndex = generateShouldIndex(flag, iDown, iUp, n, thread_count);
+  int* shouldIndex = generateShouldIndex(flag, iDown, iUp, n);
 
-  #pragma omp parallel for num_threads(thread_count)
+  #pragma omp parallel for num_threads(THREAD_COUNT)
   for (int i = 0; i < n; i++) {
     shouldArr[shouldIndex[i]] = arr[i];
   }
 
-  #pragma omp parallel for num_threads(thread_count)
+  #pragma omp parallel for num_threads(THREAD_COUNT)
   for (int i = 0; i < n; i++) {
     arr[i] = shouldArr[i];
   }
 }
 
-void split(int* arr, int n, int idx, int thread_count) {
-  int* flag = generateFlag(arr, n, idx, thread_count);
+void split(int* arr, int n, int idx) {
+  int* flag = generateFlag(arr, n, idx);
   int* iDown = generateIDown(flag, n);
   int* iUp = generateIUp(flag, n);
 
-  permute(arr, flag, iDown, iUp, n, thread_count);
+  permute(arr, flag, iDown, iUp, n);
 }
 
-void radixSort(int* arr, int n, int thread_count) {
+void radixSort(int* arr, int n) {
   int maxElement = getMaxElement(arr, n);
   int idx = 0;
 
-  while ((maxElement >> idx) > 0) {
-    split(arr, n, idx, thread_count);
-    idx++;
+  for (int i = 0; i < 32; i++) {
+    split(arr, n, i);
   }
 }
 
 int main(int argc, char** argv) {
-  int thread_count;
+  int n;
 
   if (argc != 2){
     cout << "Wrong input" << endl;
-    cout << "./radix_sort thread_count" << endl;
+    cout << "./radix_sort <N>" << endl;
     exit(0);
   } else {
-    thread_count = stoi(argv[1]);
+    n = stoi(argv[1]);
   }
-  
-  int n;
-  cout << "Insert the size of the array :" << endl;
-  cin >> n;
+
+
   int * arr = (int*) malloc(n * sizeof(int));
   int * c_arr = (int*) malloc(n * sizeof(int));
 
   rng(arr, n);
-  for (int i = 0; i< n; i++){
-    c_arr[i] = arr[i];
-  }
+  rng(c_arr, n);
+  printArrei(arr, n);
+  printArrei(c_arr, n);
 
   clock_t beginTime = clock();
-  radixSort(arr, n, thread_count);
+  radixSort(arr, n);
   clock_t endTime = clock();
 
   double elapsedTime = (double) endTime - beginTime / CLOCKS_PER_SEC;
 
   cout << "Parallel Radix Sort Time: " << elapsedTime << endl;
   serialRadixSort(c_arr, n);
+
+  printArr(arr, n);
+  cout << endl;
 }
